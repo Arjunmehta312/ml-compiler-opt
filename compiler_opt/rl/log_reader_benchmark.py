@@ -127,6 +127,7 @@ def _stats(
 
 
 def main(_):
+  # pylint: disable=consider-using-with
   logfile = tempfile.NamedTemporaryFile(delete=False).name
   try:
     _write_log(logfile, _OBSERVATIONS.value, _ELEM_COUNT.value)
@@ -138,10 +139,9 @@ def main(_):
               lambda: _parse_with(logfile, _add_feature_original), number=1))
       current_times.append(
           timeit.timeit(
-              lambda: _parse_with(logfile, log_reader._add_feature),  # pylint: disable=protected-access
-              number=1,
-          ))
+              lambda: _parse_with(logfile, log_reader._add_feature), number=1))  # pylint: disable=protected-access
     se_orig = _parse_with(logfile, _add_feature_original)
+    # pylint: disable=protected-access
     se_cur = _parse_with(logfile, log_reader._add_feature)
     serialized_bytes = None
     for key in se_orig:
@@ -156,8 +156,9 @@ def main(_):
           f"p95={p95_orig:.3f}s 95% CI=({ci_orig[0]:.3f},{ci_orig[1]:.3f})")
     print(f"    numpy: median={m_cur:.3f}s mean={mean_cur:.3f}s "
           f"p95={p95_cur:.3f}s 95% CI=({ci_cur[0]:.3f},{ci_cur[1]:.3f})")
-    print(f"speedup (median): {m_orig / m_cur:.2f}x "
-          f"({100 * (m_orig - m_cur) / m_orig:.1f}% faster)")
+    speedup_str = (f"speedup (median): {m_orig / m_cur:.2f}x "
+                   f"({100 * (m_orig - m_cur) / m_orig:.1f}% faster)")
+    print(speedup_str)
     print(f"serialized output identical ({serialized_bytes} bytes per context)")
   finally:
     os.unlink(logfile)
